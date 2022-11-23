@@ -10,14 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - uses: 8BitJonny/gh-get-current-pr@2.1.3
+        id: PR
+
       - name: Test
         run: |
           echo ${{github.event.workflow_run.id}}
           cat << EOF > a.json
           ${{ toJSON(github.event.workflow_run.pull_requests) }}
           EOF
+          cat << EOF > b.json
+          ${{ toJSON(fromJSON(steps.current_pr.outputs.pr)) }}
+          EOF
 
       - uses: actions/upload-artifact@v2
         with:
-          name: Artifact
+          name: Artifact-1
           path: a.json
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Artifact-2
+          path: b.json
