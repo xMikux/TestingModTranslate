@@ -26,13 +26,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: 8BitJonny/gh-get-current-pr@2.1.3
-        id: pr
+        id: PR
 
       - name: test
         run: |
           echo ${{ github.run_id }}
           echo  ${{ github.event.number }}
-          echo "Json is ${{ steps.pr.outputs.pr }}"
+          cat << EOF > b.json
+          ${{ toJSON(steps.PR.outputs.pr) }}
+          EOF
+          cat b.json
 
       - uses: actions/github-script@v5
         with:
@@ -60,7 +63,7 @@ jobs:
             }
             const {owner, repo} = context.repo;
             const run_id = ${{ github.run_id }};
-            const pull_requests = ${{ steps.PR.outputs.pr }};
+            const pull_requests = ${{ toJSON(steps.PR.outputs.pr) }};
             if (!pull_requests.length) {
               return core.error("This workflow doesn't match any pull requests!");
             }
