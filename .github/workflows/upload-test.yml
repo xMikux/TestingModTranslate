@@ -29,6 +29,7 @@ jobs:
         run: |
           echo ${{ github.run_id }}
           echo  ${{ github.event.number }}
+          echo "Json is ${{ steps.PR.outputs.pr }}"
 
       - uses: actions/github-script@v5
         with:
