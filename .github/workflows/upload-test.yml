@@ -50,8 +50,8 @@ jobs:
               }
             }
             const {owner, repo} = context.repo;
-            const run_id = ${{github.event.workflow_run.id}};
-            const pull_requests = ${{ toJSON(github.event.workflow_run.pull_requests) }};
+            const run_id = ${{github.event.id}};
+            const pull_requests = ${{ toJSON(github.event.pull_requests) }};
             if (!pull_requests.length) {
               return core.error("This workflow doesn't match any pull requests!");
             }
