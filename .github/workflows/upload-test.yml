@@ -27,8 +27,8 @@ jobs:
     steps:
       - name: test
         run: |
-          echo ${{ github.event.id }}
-          echo  ${{ toJSON(github.event.pull_requests) }}
+          echo ${{ github.id }}
+          echo  ${{ toJSON(github.pull_requests) }}
 
       - uses: actions/github-script@v5
         with:
@@ -55,8 +55,8 @@ jobs:
               }
             }
             const {owner, repo} = context.repo;
-            const run_id = ${{ github.event.id }};
-            const pull_requests = ${{ toJSON(github.event.pull_requests) }};
+            const run_id = ${{ github.id }};
+            const pull_requests = ${{ toJSON(github.pull_requests) }};
             if (!pull_requests.length) {
               return core.error("This workflow doesn't match any pull requests!");
             }
