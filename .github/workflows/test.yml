@@ -1,0 +1,16 @@
+name: A
+on:
+  workflow_run:
+    workflows: ['Test workflow with upload']
+    types: [completed]
+
+jobs:
+  pr_comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Test
+        run: |
+          echo ${{github.event.workflow_run.id}}
+          echo ${{ toJSON(github.event.workflow_run.pull_requests) }}
