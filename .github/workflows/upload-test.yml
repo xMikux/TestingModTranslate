@@ -25,6 +25,11 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
+      - name: test
+        run: |
+          echo ${{ github.event.id }}
+          echo  ${{ toJSON(github.event.pull_requests) }}
+
       - uses: actions/github-script@v5
         with:
           # This snippet is public-domain, taken from
@@ -50,7 +55,7 @@ jobs:
               }
             }
             const {owner, repo} = context.repo;
-            const run_id = ${{github.event.id}};
+            const run_id = ${{ github.event.id }};
             const pull_requests = ${{ toJSON(github.event.pull_requests) }};
             if (!pull_requests.length) {
               return core.error("This workflow doesn't match any pull requests!");
