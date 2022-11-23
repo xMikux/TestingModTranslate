@@ -13,7 +13,9 @@ jobs:
       - name: Test
         run: |
           echo ${{github.event.workflow_run.id}}
-          echo ${{ toJSON(github.event.workflow_run.pull_requests) }} > a.json
+          cat << EOF > a.json
+          ${{ toJSON(github.event.workflow_run.pull_requests) }}
+          EOF
 
       - uses: actions/upload-artifact@v2
         with:
