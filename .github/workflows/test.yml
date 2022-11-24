@@ -36,10 +36,13 @@ jobs:
       - name: Get Current Artifacts
         id: Artifacts
         run: |
-          Artifact_0_Name=$(${{ toJSON(github.event.workflow_run.pull_requests) }} | jq -r '.artifacts[0] | .name')
-          Artifact_0_ID=$(${{ toJSON(github.event.workflow_run.pull_requests) }} | jq -r '.artifacts[0] | .id')
-          Artifact_1_Name=$(${{ toJSON(github.event.workflow_run.pull_requests) }} | jq -r '.artifacts[1] | .name')
-          Artifact_1_ID=$(${{ toJSON(github.event.workflow_run.pull_requests) }} | jq -r '.artifacts[1] | .id')
+          cat << EOF > output_artifacts.json
+          ${{ toJSON(github.event.workflow_run.pull_requests) }}
+          EOF
+          Artifact_0_Name=$(jq -r '.artifacts[0] | .name' output_artifacts.json)
+          Artifact_0_ID=$(jq -r '.artifacts[0] | .id' output_artifacts.json)
+          Artifact_1_Name=$(jq -r '.artifacts[1] | .name' output_artifacts.json)
+          Artifact_1_ID=$(jq -r '.artifacts[1] | .id' output_artifacts.json)
           echo "Artifact_0_Name=$Artifact_0_Name" >> $GITHUB_OUTPUT
           echo "$Artifact_0_Name"
           echo "Artifact_0_ID=$Artifact_0_ID" >> $GITHUB_OUTPUT
@@ -49,13 +52,13 @@ jobs:
           echo "Artifact_1_ID=$Artifact_1_ID" >> $GITHUB_OUTPUT
           echo "$Artifact_1_ID"
 
-      # - name: Create or update comment
-      #   uses: thollander/actions-comment-pull-request@v1
-      #   with:
-      #     comment_includes: '感謝貢獻！❤️'
-      #     message: |
-      #       感謝貢獻！❤️
+      - name: Create or update comment
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          comment_includes: '感謝貢獻！❤️'
+          message: |
+            感謝貢獻！❤️
             
-      #       下載合併請求測試用翻譯包：
-      #       - [${{ steps.Artifacts.outputs.Artifact_1_Name }}](https://nightly.link/${{ github.repository }}/actions/artifacts/${{ steps.Artifacts.outputs.Artifact_1_ID }}.zip)
-      #       - [${{ steps.Artifacts.outputs.Artifact_2_Name }}](https://nightly.link/${{ github.repository }}/actions/artifacts/${{ steps.Artifacts.outputs.Artifact_2_ID }}.zip)
+            下載合併請求測試用翻譯包：
+            - [${{ steps.Artifacts.outputs.Artifact_1_Name }}](https://nightly.link/${{ github.repository }}/actions/artifacts/${{ steps.Artifacts.outputs.Artifact_1_ID }}.zip)
+            - [${{ steps.Artifacts.outputs.Artifact_2_Name }}](https://nightly.link/${{ github.repository }}/actions/artifacts/${{ steps.Artifacts.outputs.Artifact_2_ID }}.zip)
