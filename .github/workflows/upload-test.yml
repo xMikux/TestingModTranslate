@@ -1,7 +1,7 @@
 name: Test workflow with upload
 on:
-  push:
-    paths: ['.github/workflows/upload-test.yml']
+  # push:
+  #   paths: ['.github/workflows/upload-test.yml']
   pull_request:
     paths: ['.github/workflows/upload-test.yml']
 jobs:
@@ -19,6 +19,8 @@ jobs:
         with:
           name: Artifact-2
           path: art-2.txt
+      - run: |
+          wait 60s
 
   pr_comment:
     needs: [ build ]
