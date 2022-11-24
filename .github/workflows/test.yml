@@ -1,64 +1,54 @@
-name: A
+name: Comment on pull request
 on:
   workflow_run:
     workflows: ['Test workflow with upload']
     types: [completed]
-
 jobs:
   pr_comment:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    
     steps:
-      # - uses: 8BitJonny/gh-get-current-pr@2.1.3
-      #   id: PR
-
-      # - name: Test
-      #   run: |
-      #     echo ${{github.event.workflow_run.id}}
-      #     cat << EOF > a.json
-      #     ${{ toJSON(github.event.workflow_run.pull_requests) }}
-      #     EOF
-      #     cat << EOF > b.json
-      #     ${{ toJSON(fromJSON(steps.current_pr.outputs.pr)) }}
-      #     EOF
-
-      # - uses: actions/upload-artifact@v2
-      #   with:
-      #     name: Artifact-1
-      #     path: a.json
-
-      # - uses: actions/upload-artifact@v2
-      #   with:
-      #     name: Artifact-2
-      #     path: b.json
-
-      - name: Get Current Artifacts
-        id: Artifacts
-        run: |
-          cat << EOF > output_artifacts.json
-          ${{ toJSON(github.event.workflow_run.pull_requests) }}
-          EOF
-          Artifact_0_Name=$(jq -r '.artifacts[0] | .name' output_artifacts.json)
-          Artifact_0_ID=$(jq -r '.artifacts[0] | .id' output_artifacts.json)
-          Artifact_1_Name=$(jq -r '.artifacts[1] | .name' output_artifacts.json)
-          Artifact_1_ID=$(jq -r '.artifacts[1] | .id' output_artifacts.json)
-          echo "Artifact_0_Name=$Artifact_0_Name" >> $GITHUB_OUTPUT
-          echo "$Artifact_0_Name"
-          echo "Artifact_0_ID=$Artifact_0_ID" >> $GITHUB_OUTPUT
-          echo "$Artifact_0_ID"
-          echo "Artifact_1_Name=$Artifact_1_Name" >> $GITHUB_OUTPUT
-          echo "$Artifact_1_Name"
-          echo "Artifact_1_ID=$Artifact_1_ID" >> $GITHUB_OUTPUT
-          echo "$Artifact_1_ID"
-
-      - name: Create or update comment
-        uses: thollander/actions-comment-pull-request@v1
+      - uses: actions/github-script@v6
         with:
-          comment_includes: '感謝貢獻！❤️'
-          message: |
-            感謝貢獻！❤️
-            
-            下載合併請求測試用翻譯包：
-            - [${{ steps.Artifacts.outputs.Artifact_1_Name }}](https://nightly.link/${{ github.repository }}/actions/artifacts/${{ steps.Artifacts.outputs.Artifact_1_ID }}.zip)
-            - [${{ steps.Artifacts.outputs.Artifact_2_Name }}](https://nightly.link/${{ github.repository }}/actions/artifacts/${{ steps.Artifacts.outputs.Artifact_2_ID }}.zip)
+          # This snippet is public-domain, taken from
+          # https://github.com/oprypin/nightly.link/blob/master/.github/workflows/pr-comment.yml
+          script: |
+            async function upsertComment(owner, repo, issue_number, purpose, body) {
+              const {data: comments} = await github.rest.issues.listComments(
+                {owner, repo, issue_number});
+              const marker = `<!-- bot: ${purpose} -->`;
+              body = marker + "\n" + body;
+              const existing = comments.filter((c) => c.body.includes(marker));
+              if (existing.length > 0) {
+                const last = existing[existing.length - 1];
+                core.info(`Updating comment ${last.id}`);
+                await github.rest.issues.updateComment({
+                  owner, repo,
+                  body,
+                  comment_id: last.id,
+                });
+              } else {
+                core.info(`Creating a comment in issue / PR #${issue_number}`);
+                await github.rest.issues.createComment({issue_number, body, owner, repo});
+              }
+            }
+            const {owner, repo} = context.repo;
+            const run_id = ${{github.event.workflow_run.id}};
+            const pull_requests = ${{ toJSON(github.event.workflow_run.pull_requests) }};
+            if (!pull_requests.length) {
+              return core.error("This workflow doesn't match any pull requests!");
+            }
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts, {owner, repo, run_id});
+            if (!artifacts.length) {
+              return core.error(`No artifacts found`);
+            }
+            let body = `Download the artifacts for this pull request:\n`;
+            for (const art of artifacts) {
+              body += `\n* [${art.name}.zip](https://nightly.link/${owner}/${repo}/actions/artifacts/${art.id}.zip)`;
+            }
+            core.info("Review thread message body:", body);
+            for (const pr of pull_requests) {
+              await upsertComment(owner, repo, pr.number,
+                "nightly-link", body);
+            }

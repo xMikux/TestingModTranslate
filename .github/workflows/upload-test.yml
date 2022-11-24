@@ -22,7 +22,7 @@ jobs:
 
   pr_comment:
     needs: [ build ]
-    if: github.event_name == 'pull_request'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: 8BitJonny/gh-get-current-pr@2.1.3
