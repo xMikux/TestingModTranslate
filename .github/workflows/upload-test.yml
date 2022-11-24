@@ -20,7 +20,7 @@ jobs:
           name: Artifact-2
           path: art-2.txt
       - run: |
-          wait 60s
+          sleep 60s
 
   pr_comment:
     needs: [ build ]
